@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Property Investment Calculator | Bevan Waayer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f0f0;
+      min-height: 100vh;
+      padding: 60px 20px;
+      color: #1a1a1a;
+    }
+
+    .page-header {
+      max-width: 680px;
+      margin: 0 auto 40px;
+    }
+
+    .page-header h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: #1a1a1a;
+      margin-bottom: 12px;
+    }
+
+    .page-header p {
+      font-size: 1rem;
+      color: #666;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 4px;
+      padding: 48px;
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #999;
+      margin-bottom: 20px;
+    }
+
+    .section-label + .section-label,
+    .divider + .section-label {
+      margin-top: 0;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1.5px solid #f0f0f0;
+      margin: 32px 0;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-top: 5px;
+      font-weight: 500;
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .prefix, .suffix {
+      position: absolute;
+      color: #999;
+      font-size: 0.95rem;
+      font-weight: 500;
+      pointer-events: none;
+    }
+    .prefix { left: 16px; }
+    .suffix { right: 16px; }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-family: inherit;
+      color: #1a1a1a;
+      background: #fafafa;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #b3c8e8;
+      background: #fff;
+    }
+
+    .has-prefix input { padding-left: 32px; }
+    .has-suffix input { padding-right: 48px; }
+
+    select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-family: inherit;
+      color: #1a1a1a;
+      background: #fafafa;
+      appearance: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    select:focus {
+      outline: none;
+      border-color: #b3c8e8;
+      background: #fff;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Results */
+    .results-block {
+      background: #1a1a1a;
+      border-radius: 4px;
+      padding: 36px;
+      margin-top: 32px;
+      color: #fff;
+    }
+
+    .yields-row {
+      display: flex;
+      gap: 40px;
+      align-items: flex-end;
+    }
+
+    .yield-divider {
+      width: 1px;
+      height: 56px;
+      background: #333;
+      flex-shrink: 0;
+    }
+
+    .yield-item {}
+
+    .yield-eyebrow {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #888;
+      margin-bottom: 6px;
+    }
+
+    .yield-value {
+      font-size: clamp(2.5rem, 6vw, 3.8rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .yield-value.secondary {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      color: #bbb;
+    }
+
+    .results-rule {
+      border: none;
+      border-top: 1px solid #2e2e2e;
+      margin: 28px 0;
+    }
+
+    .breakdown-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .stat-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    .stat-value.pos { color: #81c784; }
+    .stat-value.neg { color: #ef9a9a; }
+
+    /* Cashflow pill */
+    .cashflow-pill {
+      margin-top: 24px;
+      padding: 18px 20px;
+      background: #b3c8e8;
+      border-radius: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cashflow-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #1a1a1a;
+    }
+
+    .cashflow-amount {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #1a1a1a;
+      letter-spacing: -0.02em;
+    }
+
+    /* Verdict */
+    .verdict {
+      margin-top: 20px;
+      padding: 14px 18px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-left: 3px solid transparent;
+      color: #ccc;
+      background: #222;
+    }
+
+    .verdict.good  { border-color: #81c784; color: #81c784; }
+    .verdict.ok    { border-color: #ffcc80; color: #ffcc80; }
+    .verdict.poor  { border-color: #ef9a9a; color: #ef9a9a; }
+
+    /* Branding footer */
+    .brand-footer {
+      max-width: 680px;
+      margin: 32px auto 0;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #999;
+      font-weight: 500;
+    }
+
+    .brand-footer a {
+      color: #1a1a1a;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    @media (max-width: 500px) {
+      .card { padding: 28px 20px; }
+      .two-col { grid-template-columns: 1fr; }
+      .yields-row { gap: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>Property Investment Calculator</h1>
+    <p>Calculate gross yield, net yield, and estimated weekly cashflow on an investment property.</p>
+  </div>
+
+  <div class="card">
+
+    <div class="section-label">Purchase Details</div>
+    <div class="field">
+      <label>Purchase Price</label>
+      <div class="input-wrap has-prefix">
+        <span class="prefix">$</span>
+        <input type="number" id="purchasePrice" value="600000" min="0" step="5000">
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="section-label">Rental Income</div>
+
+    <div class="two-col">
+      <div class="field">
+        <label>Weekly Rent</label>
+        <div class="input-wrap has-prefix has-suffix">
+          <span class="prefix">$</span>
+          <input type="number" id="weeklyRent" value="550" min="0" step="10">
+          <span class="suffix">/ wk</span>
+        </div>
+        <p class="hint">Annual: <span id="annualRentHint">$0</span></p>
+      </div>
+      <div class="field">
+        <label>Vacancy Rate</label>
+        <div class="input-wrap has-suffix">
+          <input type="number" id="vacancyRate" value="2" min="0" max="100" step="0.5">
+          <span class="suffix">%</span>
+        </div>
+        <p class="hint">Typically 2–4% per year</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="section-label">Mortgage / Financing</div>
+
+    <div class="two-col">
+      <div class="field">
+        <label>Deposit</label>
+        <div class="input-wrap has-prefix">
+          <span class="prefix">$</span>
+          <input type="number" id="deposit" value="120000" min="0" step="5000">
+        </div>
+        <p class="hint">Loan amount: <span id="loanAmountHint">$0</span></p>
+      </div>
+      <div class="field">
+        <label>Interest Rate</label>
+        <div class="input-wrap has-suffix">
+          <input type="number" id="mortgageRate" value="6.5" min="0" max="30" step="0.05">
+          <span class="suffix">%</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Loan Term</label>
+        <div class="input-wrap has-suffix">
+          <input type="number" id="loanTerm" value="30" min="1" max="40" step="1">
+          <span class="suffix">yrs</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Repayment Type</label>
+        <div class="input-wrap">
+          <select id="repaymentType">
+            <option value="principal_interest">Principal &amp; Interest</option>
+            <option value="interest_only">Interest Only</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="section-label">Annual Operating Costs</div>
+
+    <div class="two-col">
+      <div class="field">
+        <label>Council Rates</label>
+        <div class="input-wrap has-prefix">
+          <span class="prefix">$</span>
+          <input type="number" id="rates" value="2000" min="0" step="100">
+        </div>
+      </div>
+      <div class="field">
+        <label>Insurance</label>
+        <div class="input-wrap has-prefix">
+          <span class="prefix">$</span>
+          <input type="number" id="insurance" value="1500" min="0" step="100">
+        </div>
+      </div>
+      <div class="field">
+        <label>Maintenance</label>
+        <div class="input-wrap has-prefix">
+          <span class="prefix">$</span>
+          <input type="number" id="maintenance" value="2000" min="0" step="100">
+        </div>
+      </div>
+      <div class="field">
+        <label>Property Management</label>
+        <div class="input-wrap has-suffix">
+          <input type="number" id="mgmtPct" value="8" min="0" max="20" step="0.5">
+          <span class="suffix">%</span>
+        </div>
+        <p class="hint">% of gross rental income</p>
+      </div>
+      <div class="field">
+        <label>Other Costs</label>
+        <div class="input-wrap has-prefix">
+          <span class="prefix">$</span>
+          <input type="number" id="otherCosts" value="500" min="0" step="100">
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-block">
+      <div class="yields-row">
+        <div class="yield-item">
+          <div class="yield-eyebrow">Gross Yield</div>
+          <div class="yield-value" id="grossYield">0.00%</div>
+        </div>
+        <div class="yield-divider"></div>
+        <div class="yield-item">
+          <div class="yield-eyebrow">Net Yield</div>
+          <div class="yield-value secondary" id="netYield">0.00%</div>
+        </div>
+      </div>
+
+      <hr class="results-rule">
+
+      <div class="breakdown-grid">
+        <div>
+          <div class="stat-label">Gross Annual Rent</div>
+          <div class="stat-value pos" id="grossRent">$0</div>
+        </div>
+        <div>
+          <div class="stat-label">Effective Annual Rent</div>
+          <div class="stat-value pos" id="effectiveRent">$0</div>
+        </div>
+        <div>
+          <div class="stat-label">Operating Costs</div>
+          <div class="stat-value neg" id="totalCosts">$0</div>
+        </div>
+        <div>
+          <div class="stat-label">Net Income (pre-mortgage)</div>
+          <div class="stat-value" id="netIncome">$0</div>
+        </div>
+        <div>
+          <div class="stat-label">Annual Mortgage</div>
+          <div class="stat-value neg" id="annualMortgage">$0</div>
+        </div>
+        <div>
+          <div class="stat-label">Net Income (after mortgage)</div>
+          <div class="stat-value" id="netAfterMortgage">$0</div>
+        </div>
+      </div>
+
+      <div class="cashflow-pill">
+        <div>
+          <div class="cashflow-label">Weekly Cashflow (pre-mortgage)</div>
+          <div class="cashflow-amount" id="weeklyCashflow">$0</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="cashflow-label">After mortgage</div>
+          <div class="cashflow-amount" id="weeklyAfterMortgage">$0</div>
+        </div>
+      </div>
+
+      <div class="verdict" id="verdict">
+        <span id="verdictText"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="brand-footer">
+    <a href="https://www.bevanwaayer.nz">bevanwaayer.nz</a> — Mortgage Advisor · New Zealand
+  </div>
+
+<script>
+  function fmt(n) {
+    const abs = Math.abs(Math.round(n));
+    return (n < 0 ? '−$' : '$') + abs.toLocaleString('en-NZ');
+  }
+
+  function calcMortgagePayment(principal, annualRate, years, type) {
+    if (principal <= 0) return 0;
+    const r = annualRate / 100 / 12;
+    const n = years * 12;
+    if (type === 'interest_only') {
+      return principal * (annualRate / 100 / 12);
+    }
+    if (r === 0) return n > 0 ? principal / n : 0;
+    return principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  }
+
+  function calculate() {
+    const price     = parseFloat(document.getElementById('purchasePrice').value) || 0;
+    const weekly    = parseFloat(document.getElementById('weeklyRent').value) || 0;
+    const vacancy   = parseFloat(document.getElementById('vacancyRate').value) || 0;
+    const rates     = parseFloat(document.getElementById('rates').value) || 0;
+    const insurance = parseFloat(document.getElementById('insurance').value) || 0;
+    const maint     = parseFloat(document.getElementById('maintenance').value) || 0;
+    const mgmtPct   = parseFloat(document.getElementById('mgmtPct').value) || 0;
+    const other     = parseFloat(document.getElementById('otherCosts').value) || 0;
+    const deposit   = parseFloat(document.getElementById('deposit').value) || 0;
+    const mortRate  = parseFloat(document.getElementById('mortgageRate').value) || 0;
+    const loanTerm  = parseFloat(document.getElementById('loanTerm').value) || 30;
+    const repType   = document.getElementById('repaymentType').value;
+
+    // Rental calcs
+    const annualGross = weekly * 52;
+    const effectiveRent = annualGross * (1 - vacancy / 100);
+    const mgmtFee = effectiveRent * (mgmtPct / 100);
+    const totalCosts = rates + insurance + maint + mgmtFee + other;
+    const netIncome = effectiveRent - totalCosts;
+    const grossYield = price > 0 ? (annualGross / price) * 100 : 0;
+    const netYield   = price > 0 ? (netIncome  / price) * 100 : 0;
+
+    // Mortgage calcs
+    const loanAmount = Math.max(0, price - deposit);
+    const monthlyPayment = calcMortgagePayment(loanAmount, mortRate, loanTerm, repType);
+    const annualMortgage = monthlyPayment * 12;
+    const netAfterMortgage = netIncome - annualMortgage;
+
+    // Update hints
+    document.getElementById('annualRentHint').textContent = '$' + Math.round(annualGross).toLocaleString('en-NZ');
+    document.getElementById('loanAmountHint').textContent = '$' + Math.round(loanAmount).toLocaleString('en-NZ');
+
+    // Yields
+    document.getElementById('grossYield').textContent = grossYield.toFixed(2) + '%';
+    document.getElementById('netYield').textContent   = netYield.toFixed(2) + '%';
+
+    // Breakdown
+    document.getElementById('grossRent').textContent      = fmt(annualGross);
+    document.getElementById('effectiveRent').textContent  = fmt(effectiveRent);
+    document.getElementById('totalCosts').textContent     = fmt(totalCosts);
+    document.getElementById('annualMortgage').textContent = fmt(annualMortgage);
+
+    const netEl = document.getElementById('netIncome');
+    netEl.textContent = fmt(netIncome);
+    netEl.className = 'stat-value ' + (netIncome >= 0 ? 'pos' : 'neg');
+
+    const netMortEl = document.getElementById('netAfterMortgage');
+    netMortEl.textContent = fmt(netAfterMortgage);
+    netMortEl.className = 'stat-value ' + (netAfterMortgage >= 0 ? 'pos' : 'neg');
+
+    // Cashflow pills
+    document.getElementById('weeklyCashflow').textContent = fmt(netIncome / 52);
+    const wam = document.getElementById('weeklyAfterMortgage');
+    wam.textContent = fmt(netAfterMortgage / 52);
+    wam.style.color = netAfterMortgage >= 0 ? '#1a1a1a' : '#c62828';
+
+    // Verdict based on gross yield
+    const verdict = document.getElementById('verdict');
+    const verdictTxt = document.getElementById('verdictText');
+    verdict.className = 'verdict';
+
+    if (grossYield >= 6) {
+      verdict.classList.add('good');
+      verdictTxt.textContent = `Strong gross yield of ${grossYield.toFixed(2)}% — generally considered a good return for an investment property.`;
+    } else if (grossYield >= 4) {
+      verdict.classList.add('ok');
+      verdictTxt.textContent = `Moderate gross yield of ${grossYield.toFixed(2)}% — common in capital-growth focused markets. Consider long-term appreciation.`;
+    } else {
+      verdict.classList.add('poor');
+      verdictTxt.textContent = `Low gross yield of ${grossYield.toFixed(2)}% — weigh whether expected capital growth justifies the cashflow position.`;
+    }
+  }
+
+  const ids = ['purchasePrice','deposit','mortgageRate','loanTerm','repaymentType',
+               'weeklyRent','vacancyRate','rates','insurance','maintenance','mgmtPct','otherCosts'];
+  ids.forEach(id => document.getElementById(id).addEventListener('input', calculate));
+  calculate();
+</script>
+</body>
+</html>

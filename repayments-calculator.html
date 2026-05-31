@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repayments Calculator | Bevan Waayer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f0f0;
+      min-height: 100vh;
+      padding: 60px 24px 80px;
+      color: #1a1a1a;
+    }
+
+    /* ── Page header ── */
+    .page-header {
+      max-width: 640px;
+      margin: 0 auto 40px;
+    }
+    .page-header h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+    }
+    .page-header p { font-size: 1rem; color: #666; }
+
+    /* ── Scenarios row ── */
+    .scenarios-row {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: nowrap;
+    }
+
+    /* ── Scenario card ── */
+    .scenario-card {
+      background: #fff;
+      border-radius: 4px;
+      width: 340px;
+      flex-shrink: 0;
+      overflow: hidden;
+      animation: fadeSlideIn 0.25s ease;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .scenario-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1.5px solid #f0f0f0;
+    }
+
+    .scenario-name {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #fff;
+      background: #1a1a1a;
+      padding: 5px 12px;
+      border-radius: 40px;
+      border: none;
+      outline: none;
+      cursor: text;
+      font-family: inherit;
+      min-width: 60px;
+      max-width: 160px;
+    }
+    .scenario-name:focus { background: #333; }
+
+    .remove-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1.5px solid #e0e0e0;
+      background: transparent;
+      color: #bbb;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      line-height: 1;
+      font-family: inherit;
+    }
+    .remove-btn:hover { border-color: #ff6b6b; color: #ff6b6b; background: #fff5f5; }
+
+    .scenario-body { padding: 24px 20px 0; }
+
+    /* ── Inputs ── */
+    .field { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .input-wrap { position: relative; }
+
+    .prefix, .suffix {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+      font-size: 0.95rem;
+      font-weight: 500;
+      pointer-events: none;
+    }
+    .prefix { left: 13px; }
+    .suffix { right: 13px; }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1.5px solid #e8e8e8;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: #1a1a1a;
+      background: #fafafa;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #b3c8e8;
+      background: #fff;
+    }
+    .has-prefix input { padding-left: 28px; }
+    .has-suffix input { padding-right: 40px; }
+
+    /* ── Frequency buttons ── */
+    .freq-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .freq-btn {
+      padding: 10px 6px;
+      border: 1.5px solid #e8e8e8;
+      border-radius: 40px;
+      background: #fafafa;
+      color: #666;
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .freq-btn:hover { border-color: #b3c8e8; color: #1a1a1a; }
+    .freq-btn.active {
+      background: #b3c8e8;
+      border-color: #b3c8e8;
+      color: #1a1a1a;
+    }
+
+    /* ── Results block ── */
+    .results-block {
+      background: #1a1a1a;
+      margin: 20px;
+      border-radius: 4px;
+      padding: 24px;
+      color: #fff;
+    }
+
+    .results-eyebrow {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #777;
+      margin-bottom: 6px;
+    }
+
+    .repayment-amount {
+      font-size: 2.4rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .repayment-freq {
+      font-size: 0.82rem;
+      color: #777;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .results-rule {
+      border: none;
+      border-top: 1px solid #2e2e2e;
+      margin: 20px 0;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .stat-label {
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666;
+      margin-bottom: 3px;
+    }
+
+    .stat-value {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    /* ── Extra repayments slider section ── */
+    .extra-section {
+      margin: 0 20px 20px;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1.5px solid #ebebeb;
+    }
+
+    .extra-header {
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      background: #fafafa;
+      border-bottom: 1.5px solid transparent;
+      transition: background 0.15s;
+    }
+    .extra-header:hover { background: #f4f4f4; }
+    .extra-header.open { border-bottom-color: #ebebeb; background: #f4f4f4; }
+
+    .extra-header-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #555;
+    }
+
+    .extra-chevron {
+      font-size: 0.7rem;
+      color: #aaa;
+      transition: transform 0.2s;
+    }
+    .extra-header.open .extra-chevron { transform: rotate(180deg); }
+
+    .extra-body {
+      display: none;
+      padding: 16px;
+      background: #fff;
+    }
+    .extra-body.open { display: block; }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .slider-amount {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #1a1a1a;
+      min-width: 68px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: #e8e8e8;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    }
+
+    .slider-freq-note {
+      font-size: 0.72rem;
+      color: #aaa;
+      font-weight: 500;
+      margin-bottom: 14px;
+      margin-top: -10px;
+    }
+
+    .impact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .impact-item {
+      border-radius: 4px;
+      padding: 10px 12px;
+    }
+
+    .impact-item.time-saved  { background: #f0f7f0; }
+    .impact-item.int-saved   { background: #f0f5fa; }
+
+    .impact-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #999;
+      margin-bottom: 3px;
+    }
+
+    .impact-value {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #1a1a1a;
+    }
+
+    .impact-item.time-saved .impact-value { color: #2e7d32; }
+    .impact-item.int-saved  .impact-value { color: #1a5276; }
+
+    .impact-sub {
+      font-size: 0.7rem;
+      color: #aaa;
+      font-weight: 500;
+      margin-top: 1px;
+    }
+
+    .no-extra-msg {
+      font-size: 0.78rem;
+      color: #bbb;
+      text-align: center;
+      padding: 4px 0 2px;
+      font-style: italic;
+    }
+
+    /* ── Accent bar ── */
+    .accent-bar {
+      height: 3px;
+      margin: 0 20px 20px;
+      border-radius: 2px;
+    }
+
+    /* ── Amort toggle ── */
+    .amort-btn {
+      display: block;
+      width: calc(100% - 40px);
+      margin: 0 20px 20px;
+      padding: 11px;
+      background: transparent;
+      border: 1.5px solid #ebebeb;
+      border-radius: 40px;
+      color: #aaa;
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .amort-btn:hover { border-color: #b3c8e8; color: #555; }
+
+    /* ── Amort table ── */
+    .amort-section {
+      display: none;
+      padding: 0 20px 20px;
+    }
+    .amort-section.visible { display: block; }
+
+    .amort-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #aaa;
+      margin-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+    th {
+      text-align: left;
+      padding: 8px 6px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #aaa;
+      border-bottom: 1.5px solid #f0f0f0;
+    }
+    td {
+      padding: 8px 6px;
+      border-bottom: 1px solid #f5f5f5;
+      color: #444;
+      font-weight: 500;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+    .td-prin { color: #2e7d32; }
+    .td-int  { color: #c62828; }
+
+    /* ── Add scenario button ── */
+    .add-scenario-card {
+      width: 72px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 60px;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .add-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px dashed #ccc;
+      background: transparent;
+      color: #bbb;
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .add-btn:hover {
+      border-color: #1a1a1a;
+      color: #1a1a1a;
+      background: #fff;
+      transform: scale(1.08);
+    }
+    .add-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #bbb;
+      text-align: center;
+    }
+
+    /* ── Comparison bar ── */
+    .comparison-bar {
+      display: none;
+      max-width: 1100px;
+      margin: 20px auto 0;
+      background: #fff;
+      border-radius: 4px;
+      padding: 20px 28px;
+    }
+    .comparison-bar.visible { display: block; }
+    .comparison-bar-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #999;
+      margin-bottom: 14px;
+    }
+    .comparison-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .comparison-item { flex: 1; min-width: 140px; }
+    .comparison-name {
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .comparison-saving { font-size: 1.05rem; font-weight: 800; color: #2e7d32; }
+    .comparison-saving.worse { color: #c62828; }
+    .comparison-note { font-size: 0.75rem; color: #aaa; margin-top: 2px; }
+
+    /* ── Footer ── */
+    .brand-footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.8rem;
+      color: #999;
+      font-weight: 500;
+    }
+    .brand-footer a {
+      color: #1a1a1a;
+      text-decoration: none;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Repayments Calculator</h1>
+  <p>Compare up to 3 loan scenarios side by side. Click <strong>+</strong> to add a scenario.</p>
+</div>
+
+<div class="scenarios-row" id="scenariosRow"></div>
+
+<div class="comparison-bar" id="comparisonBar">
+  <div class="comparison-bar-title">Scenario Comparison</div>
+  <div class="comparison-row" id="comparisonRow"></div>
+</div>
+
+<div class="brand-footer">
+  <a href="https://www.bevanwaayer.nz">bevanwaayer.nz</a> — Mortgage Advisor · New Zealand
+</div>
+
+<script>
+  const ACCENTS       = ['#b3c8e8', '#a8d5b5', '#e8cfa8'];
+  const SCENARIO_NAMES = ['Scenario 1', 'Scenario 2', 'Scenario 3'];
+
+  const freqMap = {
+    weekly:      { periods: 52,  label: 'per week',       short: '/wk' },
+    fortnightly: { periods: 26,  label: 'per fortnight',  short: '/fn' },
+    monthly:     { periods: 12,  label: 'per month',      short: '/mo' },
+  };
+
+  let scenarios = [{
+    id: 1, slot: 0, name: 'Scenario 1',
+    amount: 500000, rate: 6.5, term: 30, freq: 'monthly',
+    extra: 0, extraOpen: false, amortVisible: false
+  }];
+  let nextId = 2;
+
+  /* ── Formatters ── */
+  function fmt(n) {
+    return '$' + Math.round(Math.abs(n)).toLocaleString('en-NZ');
+  }
+  function fmtYM(totalPeriods, periodsPerYear) {
+    const totalMonths = Math.round(totalPeriods / periodsPerYear * 12);
+    const y = Math.floor(totalMonths / 12);
+    const m = totalMonths % 12;
+    if (y === 0) return `${m}mo`;
+    if (m === 0) return `${y}yr`;
+    return `${y}yr ${m}mo`;
+  }
+
+  /* ── Core calculations ── */
+  function calcPayment(amount, rate, term, freq) {
+    const { periods } = freqMap[freq];
+    const r = rate / 100 / periods;
+    const n = term * periods;
+    if (n === 0 || amount === 0) return 0;
+    if (r === 0) return amount / n;
+    return amount * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  }
+
+  function calcBase(s) {
+    const { periods } = freqMap[s.freq];
+    const payment = calcPayment(s.amount, s.rate, s.term, s.freq);
+    const n = s.term * periods;
+    const totalRepaid   = payment * n;
+    const totalInterest = totalRepaid - s.amount;
+    return { payment, totalRepaid, totalInterest };
+  }
+
+  // Simulate extra repayment: returns { periodsUsed, totalInterest }
+  function calcWithExtra(s, extra) {
+    const { periods } = freqMap[s.freq];
+    const r = s.rate / 100 / periods;
+    const basePayment = calcPayment(s.amount, s.rate, s.term, s.freq);
+    const payment = basePayment + extra;
+    let balance = s.amount;
+    let totalInterest = 0;
+    let periodsUsed = 0;
+    const maxPeriods = s.term * periods;
+
+    for (let i = 0; i < maxPeriods; i++) {
+      const intPart  = balance * r;
+      const prinPart = Math.min(payment - intPart, balance);
+      totalInterest += intPart;
+      balance = Math.max(0, balance - prinPart);
+      periodsUsed++;
+      if (balance < 0.01) break;
+    }
+    return { periodsUsed, totalInterest };
+  }
+
+  /* ── Slider max: 3× base payment, rounded up ── */
+  function sliderMax(s) {
+    const base = calcPayment(s.amount, s.rate, s.term, s.freq);
+    return Math.ceil((base * 3) / 100) * 100;
+  }
+
+  /* ── Amortisation table rows ── */
+  function buildAmortRows(s) {
+    const { periods } = freqMap[s.freq];
+    const r = s.rate / 100 / periods;
+    const payment = calcPayment(s.amount, s.rate, s.term, s.freq);
+    let balance = s.amount;
+    let rows = '';
+    for (let yr = 1; yr <= s.term; yr++) {
+      const opening = balance;
+      let yi = 0, yp = 0;
+      for (let p = 0; p < periods; p++) {
+        const ip = balance * r;
+        const pp = Math.min(payment - ip, balance);
+        yi += ip; yp += pp;
+        balance -= pp;
+        if (balance < 0.01) balance = 0;
+      }
+      rows += `<tr>
+        <td>${yr}</td>
+        <td>${fmt(opening)}</td>
+        <td class="td-prin">${fmt(yp)}</td>
+        <td class="td-int">${fmt(yi)}</td>
+        <td>${fmt(Math.max(0, balance))}</td>
+      </tr>`;
+      if (balance === 0) break;
+    }
+    return rows;
+  }
+
+  /* ── Extra repayment impact HTML ── */
+  function extraImpactHTML(s) {
+    if (s.extra === 0) {
+      return `<p class="no-extra-msg">Move the slider to see the impact</p>`;
+    }
+    const { periods } = freqMap[s.freq];
+    const base = calcBase(s);
+    const withX = calcWithExtra(s, s.extra);
+    const periodsSaved = s.term * periods - withX.periodsUsed;
+    const intSaved = base.totalInterest - withX.totalInterest;
+    const newTermStr  = fmtYM(withX.periodsUsed, periods);
+    const savedStr    = fmtYM(periodsSaved, periods);
+
+    return `
+      <div class="impact-grid">
+        <div class="impact-item time-saved">
+          <div class="impact-label">New Loan Term</div>
+          <div class="impact-value">${newTermStr}</div>
+          <div class="impact-sub">${savedStr} sooner</div>
+        </div>
+        <div class="impact-item int-saved">
+          <div class="impact-label">Interest Saved</div>
+          <div class="impact-value">${fmt(intSaved)}</div>
+          <div class="impact-sub">vs minimum payment</div>
+        </div>
+      </div>`;
+  }
+
+  /* ── Scenario card HTML ── */
+  function scenarioCardHTML(s) {
+    const accent = ACCENTS[s.slot];
+    const freqs  = ['weekly', 'fortnightly', 'monthly'];
+    const freqBtns = freqs.map(f =>
+      `<button class="freq-btn${s.freq === f ? ' active' : ''}" data-id="${s.id}" data-freq="${f}">
+        ${f.charAt(0).toUpperCase() + f.slice(1)}
+      </button>`
+    ).join('');
+
+    const res  = calcBase(s);
+    const { label, short } = freqMap[s.freq];
+    const sMax = sliderMax(s);
+    const sliderVal = Math.min(s.extra, sMax);
+    const showRemove = scenarios.length > 1;
+
+    return `
+    <div class="scenario-card" id="sc-${s.id}">
+
+      <div class="scenario-header">
+        <input class="scenario-name" type="text" value="${s.name}" data-id="${s.id}" maxlength="20">
+        ${showRemove
+          ? `<button class="remove-btn" data-id="${s.id}" title="Remove">×</button>`
+          : '<div></div>'}
+      </div>
+
+      <div class="scenario-body">
+        <div class="field">
+          <label>Loan Amount</label>
+          <div class="input-wrap has-prefix">
+            <span class="prefix">$</span>
+            <input type="number" class="sc-amount" data-id="${s.id}" value="${s.amount}" min="0" step="1000">
+          </div>
+        </div>
+        <div class="field">
+          <label>Interest Rate</label>
+          <div class="input-wrap has-suffix">
+            <input type="number" class="sc-rate" data-id="${s.id}" value="${s.rate}" min="0" max="30" step="0.05">
+            <span class="suffix">%</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Loan Term</label>
+          <div class="input-wrap has-suffix">
+            <input type="number" class="sc-term" data-id="${s.id}" value="${s.term}" min="1" max="40" step="1">
+            <span class="suffix">yrs</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Frequency</label>
+          <div class="freq-grid">${freqBtns}</div>
+        </div>
+      </div>
+
+      <div class="results-block">
+        <div class="results-eyebrow">Minimum Repayment</div>
+        <div class="repayment-amount sc-payment" data-id="${s.id}">${fmt(res.payment)}</div>
+        <div class="repayment-freq sc-freq-label" data-id="${s.id}">${label}</div>
+        <hr class="results-rule">
+        <div class="stats-grid">
+          <div>
+            <div class="stat-label">Total Repaid</div>
+            <div class="stat-value sc-total-repaid" data-id="${s.id}">${fmt(res.totalRepaid)}</div>
+          </div>
+          <div>
+            <div class="stat-label">Total Interest</div>
+            <div class="stat-value sc-total-interest" data-id="${s.id}">${fmt(res.totalInterest)}</div>
+          </div>
+          <div>
+            <div class="stat-label">Loan Amount</div>
+            <div class="stat-value sc-loan-display" data-id="${s.id}">${fmt(s.amount)}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Extra repayments slider -->
+      <div class="extra-section">
+        <div class="extra-header${s.extraOpen ? ' open' : ''}" data-id="${s.id}">
+          <span class="extra-header-label">Extra Repayments</span>
+          <span class="extra-chevron">▼</span>
+        </div>
+        <div class="extra-body${s.extraOpen ? ' open' : ''}" id="extra-body-${s.id}">
+          <div class="slider-row">
+            <input type="range" class="sc-slider" data-id="${s.id}"
+              min="0" max="${sMax}" step="10" value="${sliderVal}"
+              style="accent-color: ${accent}">
+            <span class="slider-amount sc-extra-display" data-id="${s.id}">
+              ${sliderVal === 0 ? '$0' : fmt(sliderVal)}
+            </span>
+          </div>
+          <div class="slider-freq-note sc-slider-note" data-id="${s.id}">extra ${short} on top of minimum</div>
+          <div class="sc-impact" data-id="${s.id}">${extraImpactHTML(s)}</div>
+        </div>
+      </div>
+
+      <div class="accent-bar" style="background:${accent}; margin-top: 20px;"></div>
+
+      <button class="amort-btn sc-amort-btn" data-id="${s.id}">
+        Show Amortisation Schedule ↓
+      </button>
+
+      <div class="amort-section${s.amortVisible ? ' visible' : ''}" id="amort-${s.id}">
+        <div class="amort-title">Amortisation — Annual Summary</div>
+        <table>
+          <thead>
+            <tr><th>Yr</th><th>Opening</th><th>Principal</th><th>Interest</th><th>Closing</th></tr>
+          </thead>
+          <tbody>${buildAmortRows(s)}</tbody>
+        </table>
+      </div>
+
+    </div>`;
+  }
+
+  function addBtnHTML() {
+    return `
+    <div class="add-scenario-card" id="addScenarioBtn">
+      <button class="add-btn" title="Add scenario">+</button>
+      <div class="add-label">Add<br>Scenario</div>
+    </div>`;
+  }
+
+  /* ── Render ── */
+  function render() {
+    const row = document.getElementById('scenariosRow');
+    row.innerHTML = scenarios.map(scenarioCardHTML).join('')
+      + (scenarios.length < 3 ? addBtnHTML() : '');
+    updateComparison();
+    bindEvents();
+  }
+
+  /* ── Partial update (no full re-render) ── */
+  function updateOneScenario(id) {
+    const s = scenarios.find(x => x.id === id);
+    if (!s) return;
+    const res = calcBase(s);
+    const { label, short } = freqMap[s.freq];
+
+    qs('.sc-payment', id).textContent      = fmt(res.payment);
+    qs('.sc-freq-label', id).textContent   = label;
+    qs('.sc-total-repaid', id).textContent = fmt(res.totalRepaid);
+    qs('.sc-total-interest', id).textContent = fmt(res.totalInterest);
+    qs('.sc-loan-display', id).textContent = fmt(s.amount);
+
+    // Update slider max & note
+    const slider = qs('.sc-slider', id);
+    const newMax = sliderMax(s);
+    if (slider) {
+      slider.max = newMax;
+      if (s.extra > newMax) s.extra = newMax;
+      slider.value = s.extra;
+      qs('.sc-extra-display', id).textContent = s.extra === 0 ? '$0' : fmt(s.extra);
+      qs('.sc-slider-note', id).textContent = `extra ${short} on top of minimum`;
+    }
+
+    updateImpact(id);
+
+    const amortSection = document.getElementById(`amort-${id}`);
+    if (amortSection) amortSection.querySelector('tbody').innerHTML = buildAmortRows(s);
+
+    updateComparison();
+  }
+
+  function updateImpact(id) {
+    const s = scenarios.find(x => x.id === id);
+    if (!s) return;
+    const impactEl = qs('.sc-impact', id);
+    if (impactEl) impactEl.innerHTML = extraImpactHTML(s);
+  }
+
+  function qs(sel, id) {
+    return document.querySelector(`${sel}[data-id="${id}"]`);
+  }
+
+  /* ── Comparison bar ── */
+  function updateComparison() {
+    const bar = document.getElementById('comparisonBar');
+    const row = document.getElementById('comparisonRow');
+    if (scenarios.length < 2) { bar.classList.remove('visible'); return; }
+    bar.classList.add('visible');
+
+    const results = scenarios.map(s => ({ s, res: calcBase(s) }));
+    const minInt  = Math.min(...results.map(r => r.res.totalInterest));
+
+    row.innerHTML = results.map(({ s, res }) => {
+      const diff   = res.totalInterest - minInt;
+      const isBest = diff < 1;
+      const diffHTML = isBest
+        ? '<span class="comparison-saving">Lowest interest</span>'
+        : `<span class="comparison-saving worse">+${fmt(diff)} more interest</span>`;
+      return `
+        <div class="comparison-item">
+          <div class="comparison-name" style="color:${ACCENTS[s.slot]};filter:brightness(0.65)">${s.name}</div>
+          ${diffHTML}
+          <div class="comparison-note">${fmt(res.payment)} ${freqMap[s.freq].label} · ${fmt(res.totalInterest)} total interest</div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ── Bind events ── */
+  function bindEvents() {
+    // Add scenario
+    const addBtn = document.getElementById('addScenarioBtn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        if (scenarios.length >= 3) return;
+        const slot = scenarios.length;
+        scenarios.push({
+          id: nextId++, slot, name: SCENARIO_NAMES[slot],
+          amount: 500000, rate: 6.5, term: 30, freq: 'monthly',
+          extra: 0, extraOpen: false, amortVisible: false
+        });
+        render();
+      });
+    }
+
+    // Remove scenario
+    document.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.dataset.id);
+        scenarios = scenarios.filter(s => s.id !== id);
+        scenarios.forEach((s, i) => s.slot = i);
+        render();
+      });
+    });
+
+    // Name
+    document.querySelectorAll('.scenario-name').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const s = scenarios.find(x => x.id === +inp.dataset.id);
+        if (s) { s.name = inp.value; updateComparison(); }
+      });
+    });
+
+    // Amount / Rate / Term
+    [['sc-amount','amount'], ['sc-rate','rate'], ['sc-term','term']].forEach(([cls, prop]) => {
+      document.querySelectorAll(`.${cls}`).forEach(inp => {
+        inp.addEventListener('input', () => {
+          const s = scenarios.find(x => x.id === +inp.dataset.id);
+          if (s) { s[prop] = parseFloat(inp.value) || (prop === 'term' ? 1 : 0); updateOneScenario(s.id); }
+        });
+      });
+    });
+
+    // Frequency buttons
+    document.querySelectorAll('.freq-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = +btn.dataset.id;
+        const s  = scenarios.find(x => x.id === id);
+        if (!s) return;
+        s.freq = btn.dataset.freq;
+        document.querySelectorAll(`.freq-btn[data-id="${id}"]`).forEach(b =>
+          b.classList.toggle('active', b.dataset.freq === s.freq));
+        updateOneScenario(id);
+      });
+    });
+
+    // Extra repayments header toggle
+    document.querySelectorAll('.extra-header').forEach(hdr => {
+      hdr.addEventListener('click', () => {
+        const id = +hdr.dataset.id;
+        const s  = scenarios.find(x => x.id === id);
+        if (!s) return;
+        s.extraOpen = !s.extraOpen;
+        hdr.classList.toggle('open', s.extraOpen);
+        const body = document.getElementById(`extra-body-${id}`);
+        if (body) body.classList.toggle('open', s.extraOpen);
+      });
+    });
+
+    // Extra repayments slider
+    document.querySelectorAll('.sc-slider').forEach(slider => {
+      slider.addEventListener('input', () => {
+        const id = +slider.dataset.id;
+        const s  = scenarios.find(x => x.id === id);
+        if (!s) return;
+        s.extra = parseFloat(slider.value) || 0;
+        qs('.sc-extra-display', id).textContent = s.extra === 0 ? '$0' : fmt(s.extra);
+        updateImpact(id);
+      });
+    });
+
+    // Amort toggle
+    document.querySelectorAll('.sc-amort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = +btn.dataset.id;
+        const s  = scenarios.find(x => x.id === id);
+        if (!s) return;
+        s.amortVisible = !s.amortVisible;
+        document.getElementById(`amort-${id}`).classList.toggle('visible', s.amortVisible);
+        btn.textContent = s.amortVisible ? 'Hide Amortisation Schedule ↑' : 'Show Amortisation Schedule ↓';
+      });
+    });
+  }
+
+  render();
+</script>
+</body>
+</html>
