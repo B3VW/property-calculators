@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LVR Calculator | Bevan Waayer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f0f0;
+      min-height: 100vh;
+      padding: 60px 24px 80px;
+      color: #1a1a1a;
+    }
+
+    .page-header { max-width: 700px; margin: 0 auto 40px; }
+    .page-header h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900; line-height: 1.05;
+      letter-spacing: -0.03em; margin-bottom: 10px;
+    }
+    .page-header p { font-size: 1rem; color: #666; }
+
+    /* ── Properties row ── */
+    .properties-row {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: nowrap;
+    }
+
+    /* ── Card ── */
+    .property-card {
+      background: #fff;
+      border-radius: 4px;
+      width: 340px;
+      flex-shrink: 0;
+      overflow: hidden;
+      animation: fadeIn 0.25s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1.5px solid #f0f0f0;
+    }
+    .card-name {
+      font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: #fff; background: #1a1a1a;
+      padding: 5px 12px; border-radius: 40px;
+      border: none; outline: none; cursor: text;
+      font-family: inherit; min-width: 60px; max-width: 170px;
+    }
+    .card-name:focus { background: #333; }
+
+    .remove-btn {
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 1.5px solid #e0e0e0; background: transparent;
+      color: #bbb; font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; font-family: inherit;
+    }
+    .remove-btn:hover { border-color: #ff6b6b; color: #ff6b6b; background: #fff5f5; }
+
+    .card-body { padding: 24px 20px 0; }
+
+    /* ── Type toggle ── */
+    .type-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 6px; margin-bottom: 20px;
+    }
+    .type-btn {
+      padding: 11px 8px;
+      border: 1.5px solid #e8e8e8; border-radius: 4px;
+      background: #fafafa; color: #666;
+      font-size: 0.78rem; font-weight: 600;
+      font-family: inherit; cursor: pointer;
+      text-align: center; transition: all 0.15s; line-height: 1.3;
+    }
+    .type-btn:hover { border-color: #b3c8e8; color: #1a1a1a; }
+    .type-btn.active { background: #1a1a1a; border-color: #1a1a1a; color: #fff; }
+    .type-icon { display: block; font-size: 1rem; margin-bottom: 3px; }
+
+    /* ── Inputs ── */
+    .field { margin-bottom: 18px; }
+    label {
+      display: block; font-size: 0.78rem; font-weight: 600;
+      color: #555; margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .hint { font-size: 0.72rem; color: #aaa; margin-top: 4px; font-weight: 500; }
+    .input-wrap { position: relative; }
+    .prefix {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      left: 13px; color: #aaa; font-size: 0.95rem; font-weight: 500;
+      pointer-events: none;
+    }
+    input.num-input {
+      width: 100%; padding: 11px 13px 11px 28px;
+      border: 1.5px solid #e8e8e8; border-radius: 4px;
+      font-size: 0.95rem; font-family: inherit;
+      color: #1a1a1a; background: #fafafa;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    input.num-input:focus { outline: none; border-color: #b3c8e8; background: #fff; }
+
+    /* ── Results block ── */
+    .results-block {
+      background: #1a1a1a; margin: 20px;
+      border-radius: 4px; padding: 24px; color: #fff;
+    }
+
+    /* Hero rows: LVR and Usable Equity stacked */
+    .hero-row { display: flex; flex-direction: column; gap: 0; }
+
+    .hero-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+    }
+    .hero-item + .hero-item {
+      border-top: 1px solid #2a2a2a;
+    }
+    .hero-left { flex-shrink: 0; }
+    .hero-eyebrow {
+      font-size: 0.6rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      color: #666;
+    }
+    .hero-sub {
+      font-size: 0.65rem; color: #555;
+      margin-top: 2px; font-weight: 500;
+    }
+    .hero-value {
+      font-size: 1.9rem; font-weight: 900;
+      letter-spacing: -0.03em; line-height: 1;
+      transition: color 0.3s;
+      text-align: right;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    /* Gauge */
+    .gauge-wrap { margin: 20px 0 0; }
+    .gauge-track {
+      height: 6px; border-radius: 3px;
+      background: #2e2e2e; overflow: hidden;
+    }
+    .gauge-fill {
+      height: 100%; border-radius: 3px;
+      transition: width 0.4s ease, background 0.3s ease; max-width: 100%;
+    }
+    .gauge-labels {
+      display: flex; justify-content: space-between; margin-top: 5px;
+    }
+    .gauge-label {
+      font-size: 0.55rem; font-weight: 700;
+      color: #555; text-transform: uppercase;
+    }
+
+    /* Status */
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 16px; padding: 8px 14px;
+      border-radius: 40px; font-size: 0.75rem; font-weight: 700;
+    }
+    .status-badge.great { background: rgba(129,199,132,0.15); color: #81c784; }
+    .status-badge.good  { background: rgba(179,200,232,0.15); color: #b3c8e8; }
+    .status-badge.warn  { background: rgba(255,204,128,0.15); color: #ffcc80; }
+    .status-badge.high  { background: rgba(239,154,154,0.15); color: #ef9a9a; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .great .status-dot { background: #81c784; }
+    .good  .status-dot { background: #b3c8e8; }
+    .warn  .status-dot { background: #ffcc80; }
+    .high  .status-dot { background: #ef9a9a; }
+
+    .results-rule { border: none; border-top: 1px solid #2e2e2e; margin: 18px 0; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .stat-label {
+      font-size: 0.58rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: #666; margin-bottom: 3px;
+    }
+    .stat-value { font-size: 0.95rem; font-weight: 800; color: #fff; }
+
+    /* Accent bar */
+    .accent-bar { height: 3px; margin: 0 20px; border-radius: 2px; }
+
+    /* RBNZ note */
+    .rule-note {
+      margin: 16px 20px 0;
+      padding: 10px 14px;
+      background: #fffbeb; border-left: 3px solid #ffcc80;
+      border-radius: 0 4px 4px 0;
+      font-size: 0.72rem; font-weight: 600;
+      color: #b7791f; line-height: 1.4;
+    }
+    .rule-note.hidden { display: none; }
+
+    /* LVR info note */
+    .lvr-info-note {
+      margin: 0 20px 20px;
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-size: 0.72rem; font-weight: 600;
+      line-height: 1.5;
+    }
+    .lvr-info-note.owner-note {
+      background: #edf4fc;
+      border-left: 3px solid #b3c8e8;
+      color: #2c5282;
+    }
+    .lvr-info-note.rental-note {
+      background: #fffbeb;
+      border-left: 3px solid #ffcc80;
+      color: #b7791f;
+    }
+
+    /* ── Blended portfolio bar ── */
+    .portfolio-bar {
+      display: none;
+      max-width: 1120px;
+      margin: 20px auto 0;
+      background: #1a1a1a;
+      border-radius: 4px;
+      padding: 32px 36px;
+      color: #fff;
+      animation: fadeIn 0.25s ease;
+    }
+    .portfolio-bar.visible { display: block; }
+
+    .portfolio-eyebrow {
+      font-size: 0.65rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.14em;
+      color: #666; margin-bottom: 20px;
+    }
+
+    .portfolio-hero {
+      display: flex; gap: 0; align-items: flex-start; margin-bottom: 28px;
+    }
+    .portfolio-hero-item { flex: 1; }
+    .portfolio-hero-divider {
+      width: 1px; background: #333;
+      margin: 4px 32px 0; flex-shrink: 0; align-self: stretch;
+    }
+    .portfolio-hero-eyebrow {
+      font-size: 0.6rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      color: #666; margin-bottom: 6px;
+    }
+    .portfolio-hero-value {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 900; letter-spacing: -0.04em; line-height: 1;
+    }
+    .portfolio-hero-value.equity-val { color: #81c784; }
+    .portfolio-hero-value.lvr-val    { color: #b3c8e8; }
+    .portfolio-hero-sub {
+      font-size: 0.72rem; color: #666;
+      margin-top: 5px; font-weight: 500;
+    }
+
+    .portfolio-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding-top: 24px;
+      border-top: 1px solid #2e2e2e;
+    }
+    .portfolio-stat-label {
+      font-size: 0.58rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: #666; margin-bottom: 4px;
+    }
+    .portfolio-stat-value {
+      font-size: 1rem; font-weight: 800; color: #fff;
+    }
+
+    /* ── Add button ── */
+    .add-property-card {
+      width: 72px; flex-shrink: 0;
+      display: flex; flex-direction: column;
+      align-items: center; padding-top: 60px; gap: 8px;
+    }
+    .add-btn {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 2px dashed #ccc; background: transparent;
+      color: #bbb; font-size: 1.4rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; font-family: inherit;
+    }
+    .add-btn:hover {
+      border-color: #1a1a1a; color: #1a1a1a;
+      background: #fff; transform: scale(1.08);
+    }
+    .add-label {
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: #bbb; text-align: center;
+    }
+
+    /* ── Footer ── */
+    .brand-footer {
+      text-align: center; margin-top: 40px;
+      font-size: 0.8rem; color: #999; font-weight: 500;
+    }
+    .brand-footer a { color: #1a1a1a; text-decoration: none; font-weight: 700; }
+
+    @media (max-width: 500px) {
+      .portfolio-stats { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>LVR Calculator</h1>
+  <p>Calculate your Loan to Value Ratio and available equity. Add up to 3 properties to see your blended portfolio position.</p>
+</div>
+
+<div class="properties-row" id="propertiesRow"></div>
+
+<div class="portfolio-bar" id="portfolioBar">
+  <div class="portfolio-eyebrow">Blended Portfolio Position</div>
+  <div class="portfolio-hero">
+    <div class="portfolio-hero-item">
+      <div class="portfolio-hero-eyebrow">Total Usable Equity</div>
+      <div class="portfolio-hero-value equity-val" id="portEquity">$0</div>
+      <div class="portfolio-hero-sub" id="portEquitySub"></div>
+    </div>
+    <div class="portfolio-hero-divider"></div>
+    <div class="portfolio-hero-item">
+      <div class="portfolio-hero-eyebrow">Blended LVR</div>
+      <div class="portfolio-hero-value lvr-val" id="portLVR">0.00%</div>
+      <div class="portfolio-hero-sub" id="portLVRSub"></div>
+    </div>
+  </div>
+  <div class="portfolio-stats">
+    <div>
+      <div class="portfolio-stat-label">Total Portfolio Value</div>
+      <div class="portfolio-stat-value" id="portValue">$0</div>
+    </div>
+    <div>
+      <div class="portfolio-stat-label">Total Mortgage Owing</div>
+      <div class="portfolio-stat-value" id="portOwing">$0</div>
+    </div>
+    <div>
+      <div class="portfolio-stat-label">Total Gross Equity</div>
+      <div class="portfolio-stat-value" id="portGrossEquity">$0</div>
+    </div>
+    <div>
+      <div class="portfolio-stat-label">Usable at Blended Rate</div>
+      <div class="portfolio-stat-value" id="portUsableLVR">$0</div>
+    </div>
+  </div>
+</div>
+
+<div class="brand-footer">
+  <a href="https://www.bevanwaayer.nz">bevanwaayer.nz</a> — Mortgage Advisor · New Zealand
+</div>
+
+<script>
+  // Usable equity thresholds per type
+  const USABLE_LVR   = { owner: 0.80, rental: 0.70 };
+  const ACCENTS      = ['#b3c8e8', '#a8d5b5', '#e8cfa8'];
+  const DEFAULT_NAMES = ['New Purchase', 'Rental Property 1', 'Rental Property 2'];
+  const DEFAULT_TYPES = ['owner', 'rental', 'rental'];
+
+  const GAUGE_LABELS = {
+    owner:  ['0%', '70%', '80%', '90%+'],
+    rental: ['0%', '50%', '60%', '70%+'],
+  };
+
+
+  function getStatus(lvr, type) {
+    if (type === 'owner') {
+      if (lvr <= 70) return { cls: 'great', text: 'Excellent — strong equity position' };
+      if (lvr <= 80) return { cls: 'good',  text: 'Good — at or below 80% LVR' };
+      if (lvr <= 90) return { cls: 'warn',  text: 'Above 80% — low-equity margin may apply' };
+      return          { cls: 'high',  text: 'High LVR — limited lender options' };
+    } else {
+      if (lvr <= 60) return { cls: 'great', text: 'Excellent — strong investment equity' };
+      if (lvr <= 70) return { cls: 'good',  text: 'Good — at usable equity threshold' };
+      if (lvr <= 80) return { cls: 'warn',  text: 'Above 70% — limited usable equity' };
+      return          { cls: 'high',  text: 'High LVR — may exceed RBNZ investment limits' };
+    }
+  }
+
+  function gaugeColor(lvr, type) {
+    return { great: '#81c784', good: '#b3c8e8', warn: '#ffcc80', high: '#ef9a9a' }[getStatus(lvr, type).cls];
+  }
+
+  function usableEquity(p) {
+    return (p.value * USABLE_LVR[p.type]) - p.owing;
+  }
+
+  let properties = [{
+    id: 1, slot: 0, name: 'New Purchase',
+    type: 'owner', value: 700000, owing: 0
+  }];
+  let nextId = 2;
+
+  function fmt(n) {
+    const abs = Math.round(Math.abs(n));
+    return (n < 0 ? '−$' : '$') + abs.toLocaleString('en-NZ');
+  }
+
+  // Format a raw number for display inside an input (commas, no symbol)
+  function fmtInput(n) {
+    return Math.round(n).toLocaleString('en-NZ');
+  }
+
+  // Strip commas/spaces and parse
+  function parseInput(str) {
+    return parseFloat(String(str).replace(/[^0-9.]/g, '')) || 0;
+  }
+
+function cardHTML(p) {
+    const accent  = ACCENTS[p.slot];
+    const lvr     = p.value > 0 ? (p.owing / p.value) * 100 : 0;
+    const ue      = usableEquity(p);
+    const grossEq = p.value - p.owing;
+    const status  = getStatus(lvr, p.type);
+    const color   = gaugeColor(lvr, p.type);
+    const thresh  = Math.round(USABLE_LVR[p.type] * 100);
+    const showRemove = properties.length > 1;
+
+    return `
+    <div class="property-card" id="pc-${p.id}">
+
+      <div class="card-header">
+        <input class="card-name" type="text" value="${p.name}" data-id="${p.id}" maxlength="22">
+        ${showRemove ? `<button class="remove-btn" data-id="${p.id}">×</button>` : '<div></div>'}
+      </div>
+
+      <div class="card-body">
+        <div class="type-grid">
+          <button class="type-btn${p.type === 'owner'  ? ' active' : ''}" data-id="${p.id}" data-type="owner">
+            <span class="type-icon">🏠</span>Owner-Occupied
+          </button>
+          <button class="type-btn${p.type === 'rental' ? ' active' : ''}" data-id="${p.id}" data-type="rental">
+            <span class="type-icon">🏘️</span>Investment / Rental
+          </button>
+        </div>
+
+        <div class="field">
+          <label>Property Market Value</label>
+          <div class="input-wrap">
+            <span class="prefix">$</span>
+            <input type="text" inputmode="numeric" class="num-input pc-value" data-id="${p.id}" value="${fmtInput(p.value)}">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Mortgage Owing</label>
+          <div class="input-wrap">
+            <span class="prefix">$</span>
+            <input type="text" inputmode="numeric" class="num-input pc-owing" data-id="${p.id}" value="${fmtInput(p.owing)}">
+          </div>
+          <p class="hint">Enter $0 for a new purchase with no existing loan</p>
+        </div>
+      </div>
+
+      <div class="results-block">
+
+        <!-- Hero: LVR + Usable Equity stacked -->
+        <div class="hero-row">
+          <div class="hero-item">
+            <div class="hero-left">
+              <div class="hero-eyebrow">LVR</div>
+              <div class="hero-sub pc-lvr-sub" data-id="${p.id}">${fmt(p.owing)} of ${fmt(p.value)}</div>
+            </div>
+            <div class="hero-value pc-lvr" data-id="${p.id}" style="color:${color}">${lvr.toFixed(2)}%</div>
+          </div>
+          <div class="hero-item">
+            <div class="hero-left">
+              <div class="hero-eyebrow">Usable Equity</div>
+              <div class="hero-sub pc-ue-sub" data-id="${p.id}">at ${thresh}% LVR threshold</div>
+            </div>
+            <div class="hero-value pc-ue" data-id="${p.id}" style="color:${ue >= 0 ? '#81c784' : '#ef9a9a'}">${fmt(ue)}</div>
+          </div>
+        </div>
+
+        <!-- Gauge -->
+        <div class="gauge-wrap">
+          <div class="gauge-track">
+            <div class="gauge-fill pc-gauge" data-id="${p.id}"
+              style="width:${Math.min(lvr,100).toFixed(2)}%;background:${color}"></div>
+          </div>
+          <div class="gauge-labels pc-gauge-labels" data-id="${p.id}">
+            ${GAUGE_LABELS[p.type].map(l => `<span class="gauge-label">${l}</span>`).join('')}
+          </div>
+        </div>
+
+        <div class="status-badge ${status.cls} pc-status" data-id="${p.id}">
+          <div class="status-dot"></div>
+          <span>${status.text}</span>
+        </div>
+
+        <hr class="results-rule">
+
+        <div class="stats-grid">
+          <div>
+            <div class="stat-label">Property Value</div>
+            <div class="stat-value pc-val-stat" data-id="${p.id}">${fmt(p.value)}</div>
+          </div>
+          <div>
+            <div class="stat-label">Mortgage Owing</div>
+            <div class="stat-value pc-owing-stat" data-id="${p.id}">${fmt(p.owing)}</div>
+          </div>
+          <div>
+            <div class="stat-label">Gross Equity</div>
+            <div class="stat-value pc-gross-eq" data-id="${p.id}">${fmt(grossEq)}</div>
+          </div>
+          <div>
+            <div class="stat-label">Equity %</div>
+            <div class="stat-value pc-eq-pct" data-id="${p.id}">${p.value > 0 ? (grossEq/p.value*100).toFixed(1) : '0'}%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accent-bar" style="background:${accent}; margin-bottom:16px; margin-top:0;"></div>
+
+      <div class="lvr-info-note ${p.type === 'owner' ? 'owner-note' : 'rental-note'} pc-info-note" data-id="${p.id}">
+        ${p.type === 'owner'
+          ? '🏠 Owner-occupied properties can access high LVR lending above 80%, subject to lender criteria and a low-equity margin. Talk to us about your options.'
+          : '🏘️ Investment properties are capped at 70% LVR under RBNZ rules, requiring a minimum 30% deposit.'}
+      </div>
+
+    </div>`;
+  }
+
+  function addBtnHTML() {
+    return `
+    <div class="add-property-card" id="addPropertyBtn">
+      <button class="add-btn">+</button>
+      <div class="add-label">Add<br>Property</div>
+    </div>`;
+  }
+
+  function render() {
+    document.getElementById('propertiesRow').innerHTML =
+      properties.map(cardHTML).join('') + (properties.length < 3 ? addBtnHTML() : '');
+    updatePortfolio();
+    bindEvents();
+  }
+
+  function updateCard(id) {
+    const p      = properties.find(x => x.id === id);
+    if (!p) return;
+    const lvr    = p.value > 0 ? (p.owing / p.value) * 100 : 0;
+    const ue     = usableEquity(p);
+    const grossEq = p.value - p.owing;
+    const color  = gaugeColor(lvr, p.type);
+    const status = getStatus(lvr, p.type);
+    const thresh = Math.round(USABLE_LVR[p.type] * 100);
+
+    // LVR hero
+    const lvrEl = qs('.pc-lvr', id);
+    lvrEl.textContent  = lvr.toFixed(2) + '%';
+    lvrEl.style.color  = color;
+    qs('.pc-lvr-sub', id).textContent = `${fmt(p.owing)} of ${fmt(p.value)}`;
+
+    // Usable equity hero
+    const ueEl = qs('.pc-ue', id);
+    ueEl.textContent = fmt(ue);
+    ueEl.style.color = ue >= 0 ? '#81c784' : '#ef9a9a';
+    qs('.pc-ue-sub', id).textContent = `at ${thresh}% LVR threshold`;
+
+    // Gauge
+    const gauge = qs('.pc-gauge', id);
+    gauge.style.width      = Math.min(lvr, 100).toFixed(2) + '%';
+    gauge.style.background = color;
+
+    const labWrap = qs('.pc-gauge-labels', id);
+    if (labWrap) labWrap.innerHTML = GAUGE_LABELS[p.type].map(l =>
+      `<span class="gauge-label">${l}</span>`).join('');
+
+    // Status
+    const badge = qs('.pc-status', id);
+    badge.className   = `status-badge ${status.cls} pc-status`;
+    badge.dataset.id  = String(id);
+    badge.querySelector('span').textContent = status.text;
+
+    // Stats
+    qs('.pc-val-stat', id).textContent   = fmt(p.value);
+    qs('.pc-owing-stat', id).textContent = fmt(p.owing);
+    qs('.pc-gross-eq', id).textContent   = fmt(grossEq);
+    qs('.pc-eq-pct', id).textContent     = (p.value > 0 ? (grossEq/p.value*100).toFixed(1) : '0') + '%';
+
+    // Info note
+    const noteEl = qs('.pc-info-note', id);
+    if (noteEl) {
+      noteEl.className = `lvr-info-note ${p.type === 'owner' ? 'owner-note' : 'rental-note'} pc-info-note`;
+      noteEl.dataset.id = String(id);
+      noteEl.textContent = p.type === 'owner'
+        ? '🏠 Owner-occupied properties can access high LVR lending above 80%, subject to lender criteria and a low-equity margin. Talk to us about your options.'
+        : '🏘️ Investment properties are capped at 70% LVR under RBNZ rules, requiring a minimum 30% deposit.';
+    }
+
+    updatePortfolio();
+  }
+
+  function updatePortfolio() {
+    const bar = document.getElementById('portfolioBar');
+    if (properties.length < 2) { bar.classList.remove('visible'); return; }
+    bar.classList.add('visible');
+
+    const totalValue = properties.reduce((s, p) => s + p.value, 0);
+    const totalOwing = properties.reduce((s, p) => s + p.owing, 0);
+    const grossEq    = totalValue - totalOwing;
+    const blendedLVR = totalValue > 0 ? (totalOwing / totalValue) * 100 : 0;
+    const totalUE    = properties.reduce((s, p) => s + usableEquity(p), 0);
+
+    // Blended usable LVR = weighted average of thresholds
+    const blendedThresh = totalValue > 0
+      ? properties.reduce((s, p) => s + (p.value * USABLE_LVR[p.type]), 0) / totalValue
+      : 0;
+    const usableAtBlended = (totalValue * blendedThresh) - totalOwing;
+
+    document.getElementById('portEquity').textContent   = fmt(totalUE);
+    document.getElementById('portEquitySub').textContent =
+      `Combined usable equity across ${properties.length} properties`;
+    document.getElementById('portLVR').textContent      = blendedLVR.toFixed(2) + '%';
+    document.getElementById('portLVRSub').textContent   =
+      `${fmt(totalOwing)} owing across ${fmt(totalValue)} total value`;
+    document.getElementById('portValue').textContent    = fmt(totalValue);
+    document.getElementById('portOwing').textContent    = fmt(totalOwing);
+    document.getElementById('portGrossEquity').textContent = fmt(grossEq);
+    document.getElementById('portUsableLVR').textContent   = fmt(usableAtBlended);
+  }
+
+  function qs(sel, id) {
+    return document.querySelector(`${sel}[data-id="${id}"]`);
+  }
+
+  function bindEvents() {
+    const addBtn = document.getElementById('addPropertyBtn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        if (properties.length >= 3) return;
+        const slot = properties.length;
+        properties.push({
+          id: nextId++, slot,
+          name: DEFAULT_NAMES[slot],
+          type: DEFAULT_TYPES[slot],
+          value: 600000, owing: 0
+        });
+        render();
+      });
+    }
+
+    document.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = +btn.dataset.id;
+        properties = properties.filter(p => p.id !== id);
+        properties.forEach((p, i) => p.slot = i);
+        render();
+      });
+    });
+
+    document.querySelectorAll('.card-name').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const p = properties.find(x => x.id === +inp.dataset.id);
+        if (p) p.name = inp.value;
+      });
+    });
+
+    document.querySelectorAll('.type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = +btn.dataset.id;
+        const p  = properties.find(x => x.id === id);
+        if (!p) return;
+        p.type = btn.dataset.type;
+        document.querySelectorAll(`.type-btn[data-id="${id}"]`).forEach(b =>
+          b.classList.toggle('active', b.dataset.type === p.type));
+        updateCard(id);
+      });
+    });
+
+    document.querySelectorAll('.pc-value').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const p = properties.find(x => x.id === +inp.dataset.id);
+        if (p) { p.value = parseInput(inp.value); updateCard(p.id); }
+      });
+      inp.addEventListener('blur', () => {
+        const p = properties.find(x => x.id === +inp.dataset.id);
+        if (p) inp.value = fmtInput(p.value);
+      });
+      inp.addEventListener('focus', () => {
+        const p = properties.find(x => x.id === +inp.dataset.id);
+        if (p) inp.value = p.value || '';
+      });
+    });
+
+    document.querySelectorAll('.pc-owing').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const p = properties.find(x => x.id === +inp.dataset.id);
+        if (p) { p.owing = parseInput(inp.value); updateCard(p.id); }
+      });
+      inp.addEventListener('blur', () => {
+        const p = properties.find(x => x.id === +inp.dataset.id);
+        if (p) inp.value = fmtInput(p.owing);
+      });
+      inp.addEventListener('focus', () => {
+        const p = properties.find(x => x.id === +inp.dataset.id);
+        if (p) inp.value = p.owing || '';
+      });
+    });
+  }
+
+  render();
+</script>
+</body>
+</html>
