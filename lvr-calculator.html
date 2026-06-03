@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,15 +55,11 @@
       padding: 16px 20px;
       border-bottom: 1.5px solid #f0f0f0;
     }
-    .card-name {
+    .card-type-label {
       font-size: 0.75rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.1em;
       color: #fff; background: #1a1a1a;
       padding: 5px 12px; border-radius: 40px;
-      border: none; outline: none; cursor: text;
-      font-family: inherit; min-width: 60px; max-width: 170px;
     }
-    .card-name:focus { background: #333; }
 
     .remove-btn {
       width: 26px; height: 26px; border-radius: 50%;
@@ -274,7 +271,7 @@
 
     .portfolio-stats {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 20px;
       padding-top: 24px;
       border-top: 1px solid #2e2e2e;
@@ -286,6 +283,45 @@
     }
     .portfolio-stat-value {
       font-size: 1rem; font-weight: 800; color: #fff;
+    }
+
+    /* Max purchase section */
+    .max-purchase-section {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #2e2e2e;
+    }
+    .max-purchase-eyebrow {
+      font-size: 0.6rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      color: #666; margin-bottom: 14px;
+    }
+    .max-purchase-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .max-purchase-card {
+      background: #242424;
+      border-radius: 4px;
+      padding: 16px 18px;
+    }
+    .max-purchase-card.investment { border-left: 3px solid #a8d5b5; }
+    .max-purchase-card.owner-occ  { border-left: 3px solid #b3c8e8; }
+    .max-purchase-card-label {
+      font-size: 0.6rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: #666; margin-bottom: 6px;
+    }
+    .max-purchase-card.investment .max-purchase-card-label { color: #a8d5b5; }
+    .max-purchase-card.owner-occ  .max-purchase-card-label { color: #b3c8e8; }
+    .max-purchase-value {
+      font-size: 1.4rem; font-weight: 900;
+      letter-spacing: -0.02em; color: #fff;
+    }
+    .max-purchase-sub {
+      font-size: 0.68rem; color: #555;
+      margin-top: 4px; font-weight: 500;
     }
 
     /* ── Add button ── */
@@ -357,12 +393,24 @@
       <div class="portfolio-stat-value" id="portOwing">$0</div>
     </div>
     <div>
-      <div class="portfolio-stat-label">Total Gross Equity</div>
-      <div class="portfolio-stat-value" id="portGrossEquity">$0</div>
-    </div>
-    <div>
       <div class="portfolio-stat-label">Usable at Blended Rate</div>
       <div class="portfolio-stat-value" id="portUsableLVR">$0</div>
+    </div>
+  </div>
+
+  <div class="max-purchase-section">
+    <div class="max-purchase-eyebrow">Maximum Next Purchase Price Based on Lendable Equity</div>
+    <div class="max-purchase-grid">
+      <div class="max-purchase-card investment">
+        <div class="max-purchase-card-label">Investment Property (70% LVR)</div>
+        <div class="max-purchase-value" id="portMaxInvestment">$0</div>
+        <div class="max-purchase-sub">Using usable equity as 30% deposit</div>
+      </div>
+      <div class="max-purchase-card owner-occ">
+        <div class="max-purchase-card-label">Owner-Occupied (80% LVR)</div>
+        <div class="max-purchase-value" id="portMaxOwner">$0</div>
+        <div class="max-purchase-sub">Using usable equity as 20% deposit</div>
+      </div>
     </div>
   </div>
 </div>
@@ -441,7 +489,7 @@ function cardHTML(p) {
     <div class="property-card" id="pc-${p.id}">
 
       <div class="card-header">
-        <input class="card-name" type="text" value="${p.name}" data-id="${p.id}" maxlength="22">
+        <span class="card-type-label">${p.type === 'owner' ? '🏠 Owner-Occupied' : '🏘️ Investment / Rental'}</span>
         ${showRemove ? `<button class="remove-btn" data-id="${p.id}">×</button>` : '<div></div>'}
       </div>
 
@@ -630,16 +678,21 @@ function cardHTML(p) {
       : 0;
     const usableAtBlended = (totalValue * blendedThresh) - totalOwing;
 
-    document.getElementById('portEquity').textContent   = fmt(totalUE);
-    document.getElementById('portEquitySub').textContent =
+    // Max purchase price based on usable equity as deposit
+    const maxInvestment = totalUE > 0 ? totalUE / 0.30 : 0;
+    const maxOwner      = totalUE > 0 ? totalUE / 0.20 : 0;
+
+    document.getElementById('portEquity').textContent      = fmt(totalUE);
+    document.getElementById('portEquitySub').textContent   =
       `Combined usable equity across ${properties.length} properties`;
-    document.getElementById('portLVR').textContent      = blendedLVR.toFixed(2) + '%';
-    document.getElementById('portLVRSub').textContent   =
+    document.getElementById('portLVR').textContent         = blendedLVR.toFixed(2) + '%';
+    document.getElementById('portLVRSub').textContent      =
       `${fmt(totalOwing)} owing across ${fmt(totalValue)} total value`;
-    document.getElementById('portValue').textContent    = fmt(totalValue);
-    document.getElementById('portOwing').textContent    = fmt(totalOwing);
-    document.getElementById('portGrossEquity').textContent = fmt(grossEq);
+    document.getElementById('portValue').textContent       = fmt(totalValue);
+    document.getElementById('portOwing').textContent       = fmt(totalOwing);
     document.getElementById('portUsableLVR').textContent   = fmt(usableAtBlended);
+    document.getElementById('portMaxInvestment').textContent = fmt(maxInvestment);
+    document.getElementById('portMaxOwner').textContent      = fmt(maxOwner);
   }
 
   function qs(sel, id) {
@@ -671,13 +724,6 @@ function cardHTML(p) {
       });
     });
 
-    document.querySelectorAll('.card-name').forEach(inp => {
-      inp.addEventListener('input', () => {
-        const p = properties.find(x => x.id === +inp.dataset.id);
-        if (p) p.name = inp.value;
-      });
-    });
-
     document.querySelectorAll('.type-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = +btn.dataset.id;
@@ -686,6 +732,9 @@ function cardHTML(p) {
         p.type = btn.dataset.type;
         document.querySelectorAll(`.type-btn[data-id="${id}"]`).forEach(b =>
           b.classList.toggle('active', b.dataset.type === p.type));
+        // Update header label
+        const lbl = document.querySelector(`#pc-${id} .card-type-label`);
+        if (lbl) lbl.textContent = p.type === 'owner' ? '🏠 Owner-Occupied' : '🏘️ Investment / Rental';
         updateCard(id);
       });
     });
